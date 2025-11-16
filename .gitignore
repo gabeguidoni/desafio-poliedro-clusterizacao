@@ -1,6 +1,7 @@
 # personalizacao
 rascunhos/*
-dados/*
+dados/temporarios/*
+dados/inputs/*
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
