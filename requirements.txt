@@ -1,3 +1,4 @@
 pandas
 openpyxl
 aiohttp
+nbstripout  # para o git ficar mais limpo

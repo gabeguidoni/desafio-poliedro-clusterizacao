@@ -31,13 +31,13 @@ async def _call(async_client, cep: str) -> dict[str, tuple[str, str]]:
 
                     return {cep: (lat, lng)}
 
-            except Exception:
+            except Exception as e:
                 if tentativa == 1:
-                    print(f"Deu bug: {cep}")
+                    print(f"Nao foi: {cep} - erro: {e}")
                     return {}
 
                 # backoff + jitter
-                delay = 1 + random.random()
+                delay = 2 + random.random()
                 await asyncio.sleep(delay)
 
 
