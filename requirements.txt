@@ -3,3 +3,4 @@ openpyxl
 aiohttp
 scikit-learn
 plotly
+geopy

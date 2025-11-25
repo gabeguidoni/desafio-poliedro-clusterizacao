@@ -101,12 +101,19 @@ async def _busca_bd(ceps_unicos: list[str]):
 async def cep_to_coords(df_raw: pd.DataFrame, col_name: str) -> pd.DataFrame:
     """
     Atenção
+    ----------
         Essa é uma funcao assincrona, use ``df = await cep_to_coords()``
     Recebe
+    ----------
         df: com coluna de cep (já em str e sem hifen)
         col_name: nome da coluna com os ceps
     Retorna
-        o df original adicionado colunas lat e lng, sem a coluna do cep
+    ----------
+        o df original adicionado das colunas lat e lng, removido a coluna do cep
+    Notas
+    ----------
+        Primeiro tenta encontrar os CEPs no BD, caso nao encontre algum, baixa via
+        API e completa o BD
     """
     df = df_raw.copy()
     df["_cep"] = df[col_name].str.zfill(8)
