@@ -6,7 +6,7 @@ sem = asyncio.Semaphore(100)
 
 async def _call(async_client, cep: str) -> dict[str, tuple[str, str]]:
     """
-    retorna um dicionario do tipo {cep: (lat, lng),}
+    retorna um dicionario do tipo {cep: (lat, lon),}
     """
 
     url = f"https://cep.awesomeapi.com.br/json/{cep}"
@@ -21,13 +21,13 @@ async def _call(async_client, cep: str) -> dict[str, tuple[str, str]]:
                     data = await resp.json()
 
                     lat = data.get("lat", None)
-                    lng = data.get("lng", None)
+                    lon = data.get("lon", None)
 
-                    if not lat or not lng:
+                    if not lat or not lon:
                         print(f"CEP vazio: {cep}")
                         return {}
 
-                    return {cep: (lat, lng)}
+                    return {cep: (lat, lon)}
 
             except Exception as e:
                 if tentativa == 1:
@@ -65,11 +65,11 @@ async def _get_coords(lista_ceps, timeout_global=600):
 async def _busca_bd(ceps_unicos: list[str]):
     """
     Recebe uma lista de CEPs unicos e devolve um df com
-    cep lat lng
+    cep lat lon
 
     Busca esses ceps no bd, caso nao encontre baixa da API e atualiza o BD
     """
-    BD_PATH = "../dados/banco_dados/cep_coords.json"
+    BD_PATH = "dados/banco_dados/cep_coords.json"
 
     with open(BD_PATH, "r", encoding="utf-8") as f:
         banco_coords = json.load(f)
@@ -89,7 +89,7 @@ async def _busca_bd(ceps_unicos: list[str]):
 
     df_coords = pd.DataFrame(
         [
-            {"cep_bd": str(k), "lat": float(v[0]), "lng": float(v[1])}
+            {"cep_bd": str(k), "lat": float(v[0]), "lon": float(v[1])}
             for k, v in banco_coords.items()
         ]
     )
@@ -109,7 +109,7 @@ async def cep_to_coords(df_raw: pd.DataFrame, col_name: str) -> pd.DataFrame:
         col_name: nome da coluna com os ceps
     Retorna
     ----------
-        o df original adicionado das colunas lat e lng, removido a coluna do cep
+        o df original adicionado das colunas lat e lon, removido a coluna do cep
     Notas
     ----------
         Primeiro tenta encontrar os CEPs no BD, caso nao encontre algum, baixa via
