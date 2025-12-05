@@ -4,3 +4,6 @@ aiohttp
 scikit-learn
 plotly
 geopy
+pulp
+gurobipy==12.*
+streamlit

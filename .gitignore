@@ -2,6 +2,8 @@
 rascunhos/*
 dados/temporarios/*
 dados/inputs/*
+dados/resultados/*
+
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
