@@ -22,6 +22,7 @@ def _soma_colunas(df: pd.DataFrame, colunas: list[str], novo_nome: str, drop=Tru
     novo_nome: nome da nova coluna criada
     """
     df[novo_nome] = df[colunas].sum(axis=1).astype(int)
+
     if drop:
         df = df.drop(columns=colunas)
 
@@ -29,6 +30,7 @@ def _soma_colunas(df: pd.DataFrame, colunas: list[str], novo_nome: str, drop=Tru
 
 
 def _combina_colunas(df):
+    print("_combina_colunas()")
 
     infraestrutura = [
         "IN_ESGOTO_REDE_PUBLICA",
@@ -126,6 +128,7 @@ def _combina_colunas(df):
 
 
 def _filtra_linhas(df):
+    print("_filtra_linhas()")
 
     df = df[df["TP_DEPENDENCIA"] == 4]  # Mantem escolas particulares, reduz para 52_568
     df = df[
@@ -175,6 +178,7 @@ def _limita_outliers(serie, x, achatar=False):
 
 
 def _trata_outliers(df):
+    print("_trata_outliers()")
 
     df["QT_SALAS_UTILIZADAS"] = _limita_outliers(df["QT_SALAS_UTILIZADAS"], 98)
     df["IN_EXAME_SELECAO"] = df["IN_EXAME_SELECAO"].replace(
@@ -205,6 +209,7 @@ def _trata_outliers(df):
 
 
 def _add_enem(df_training, df_enem):
+    print("_add_enem()")
     # Remover linhas que nao tenham codigo escola
     df_enem = df_enem.dropna(subset="CO_ESCOLA")  # 1.5M linhas
 
@@ -246,6 +251,7 @@ def _add_enem(df_training, df_enem):
 
 
 def _add_val_venda(df_training, ticket_medio):
+    print("_add_val_venda()")
 
     df_training["valor_venda"] = (
         df_training["QT_MAT_INF"] * ticket_medio["ei"]
@@ -257,23 +263,32 @@ def _add_val_venda(df_training, ticket_medio):
     return df_training
 
 
-def _add_clientes(df_training, df_clientes):
+def _add_clientes(df_training: pd.DataFrame, tupla_dfs_atuais):
     """
-    Adiciona a coluna "cliente" que discrimina se já é cliente (1)
-    TODO: adicionar se é para remover essa escola (-1)
-    TODO: preencher com 0 os None
+    Adiciona a coluna "cliente" que discrimina se
+    já é cliente = 1
+    se é para ignorar = -1
+    se é para distribuir = 0
     """
+    print("_add_clientes()")
+    # Adiciona atuais clientes
+    df_clientes = tupla_dfs_atuais[0]
     df_clientes["cliente"] = 1
 
-    df_clientes = df_clientes.melt(
-        id_vars="cliente",
-        value_vars=["Código INEP 1", "Código INEP 2", "Código INEP 3"],
-        value_name="co_inep",
+    df_clientes = (
+        df_clientes.melt(
+            id_vars="cliente",
+            value_vars=["Código INEP 1", "Código INEP 2", "Código INEP 3"],
+            value_name="co_inep",
+        )
+        .dropna(subset="co_inep")
+        .drop(columns="variable")
+        .drop_duplicates()
     )
 
-    df_clientes = (
-        df_clientes.dropna(subset="co_inep").drop(columns="variable").drop_duplicates()
-    )
+    # df_clientes = (
+    #     df_clientes.dropna(subset="co_inep").drop(columns="variable").drop_duplicates()
+    # )
 
     df_clientes["co_inep"] = df_clientes["co_inep"].astype(int)
 
@@ -281,7 +296,22 @@ def _add_clientes(df_training, df_clientes):
         df_clientes, how="left", left_on="CO_ENTIDADE", right_on="co_inep"
     )
 
-    return df_training.drop(columns="co_inep")
+    # Adiciona lista de bans
+    df_bans = tupla_dfs_atuais[1]
+    df_bans["cliente_ban"] = -1
+
+    df_bans["co_inep"] = df_bans["co_inep"].astype(int)
+
+    df_training = df_training.merge(
+        df_bans, how="left", left_on="CO_ENTIDADE", right_on="co_inep"
+    )
+
+    # Preenche NaN
+    df_training["cliente"] = (
+        df_training["cliente"].fillna(df_training["cliente_ban"]).fillna(0).astype(int)
+    )
+
+    return df_training.drop(columns=["co_inep_x", "co_inep_y", "cliente_ban"])
 
 
 def build_training_df(inputs):
@@ -289,6 +319,7 @@ def build_training_df(inputs):
     Recebe uma lista com os seguintes inputs na ordem:
     escolas_atuais, local_consultores, ticket_medio, microdados_ed_basica, RESULTADOS
     """
+    print("build_training_df()")
     nome_arquivo_temporario = Path("dados/temporarios/df_training.csv")
 
     df_training = _remove_colunas(inputs[3])  # df_md_ed_basica
@@ -302,5 +333,3 @@ def build_training_df(inputs):
     df_training = _add_clientes(df_training, inputs[0])  # escolas_atuais
 
     df_training.to_csv(nome_arquivo_temporario, index=False)
-
-    # return df_training

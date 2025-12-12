@@ -1,11 +1,20 @@
+import warnings
+
+warnings.filterwarnings("ignore")
+
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 
-from utils.st_functions import sh, show_result, input_checker
-from utils.inputs_handler import build_training_df
-from utils.ml_scripts import get_afinidade_df
-from utils.po_scripts import get_results
+from utils import (
+    input_checker,
+    build_training_df,
+    get_afinidade_df,
+    get_results,
+    sh,
+    show_result,
+    get_prev_results_infos,
+)
 
 
 st.logo("imagens/logo_ita.png", size="large")
@@ -13,8 +22,9 @@ st.image("imagens/logo_poliedro.svg")
 st.header("Projeto clusterização de escolas", divider="rainbow")
 
 
-def selecionar_result(result):
-    st.session_state["result"] = result
+def selecionar_result(result_idx, texto):
+    st.session_state["result_idx"] = result_idx
+    st.session_state["texto"] = texto
 
 
 # --- Rodapé ---
@@ -36,13 +46,13 @@ with tab1:
         help="Clique aqui após fazer alteração nos inputs",
     ):
         inputs = []
-        inputs.append(input_checker("escolas_atuais"))  # adicionar aba escolas ban
+        inputs.append(input_checker("escolas_atuais"))
         inputs.append(input_checker("local_consultores"))
         inputs.append(input_checker("ticket_medio"))
         inputs.append(input_checker("microdados_ed_basica"))
         inputs.append(input_checker("RESULTADOS"))
 
-        if all(x != "erro" for x in inputs):
+        if len(inputs) == 5:
             build_training_df(inputs)
             inputs[1].to_csv(Path("dados/temporarios/df_consultores.csv"), index=False)
             st.cache_data.clear()
@@ -57,10 +67,10 @@ with tab1:
     col1, _ = st.columns(2)
     with col1:
         cobertura = st.slider(
-            "Quanto das escolas distribuir/ignorar",
+            "Quanto das escolas distribuir",
             min_value=0.05,
             max_value=0.95,
-            value=0.85,
+            value=0.35,
             step=0.05,
         )
 
@@ -74,29 +84,34 @@ with tab1:
 
     if st.session_state.get("calcular"):
         st.session_state["calcular"] = False
-        df_afinidade = get_afinidade_df(df_training, usar_afinidade)
-
-        df_resultado = get_results(
-            df_afinidade, df_training, df_consultores, usar_afinidade, cobertura
-        )
+        # df_afinidade = get_afinidade_df(df_training, usar_afinidade)
+        # df_resultado = get_results(
+        #     df_afinidade, df_training, df_consultores, usar_afinidade, cobertura
+        # )
+        df_resultado = pd.read_csv("dados/temporarios/df_resultado.csv")  # ATENCAO
+        show_result(-1)
 
 
 with tab2:
     st.subheader("Resultados anteriores")
-    texto = "📋 **Data**: 2XX/11/2025 10:27:32 **Consultores:** 25 **Escolas:** 32.123 **Afinidade:** Não **Batata:** 0,90"
 
-    rels = range(20)
-    for rel in rels[1:6]:
+    prev_results_infos = get_prev_results_infos()
+
+    for result_info in prev_results_infos:
+
+        texto = f"📋 **Data**: {result_info[0]} {result_info[1]} **Cobertura:** {result_info[2]} **Afinidade:** {result_info[3]}"
+        result_idx = result_info[4]
+
         st.button(
-            texto.replace("XX", f"{rel}"),
+            texto,
             width="stretch",
             on_click=selecionar_result,
-            args=(rel,),
+            args=(result_idx, texto),
         )
 
-    # result = st.session_state.get("result")
-    # if result:
-    #     show_result(result)
+    result_idx = st.session_state.get("result_idx")
+    if result_idx != None:
+        show_result(result_idx, st.session_state.get("texto"))
 
 
 # --- Rodapé ---

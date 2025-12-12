@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 def _consultores_handler(df_consultores):
+    print("_consultores_handler()")
     df = df_consultores.dropna()
     df["CEP"] = df["CEP"].str.replace("-", "")
     df = asyncio.run(cep_to_coords(df, "CEP"))
@@ -15,6 +16,7 @@ def _consultores_handler(df_consultores):
 
 
 def _calcula_distancias(df_escolas, df_consultores):
+    print("_calcula_distancias()")
     pre_df = {"CO_ENTIDADE": df_escolas["CO_ENTIDADE"]}
     for _, consultor in df_consultores.iterrows():
         nome_co = consultor["Consultor"]
@@ -29,16 +31,14 @@ def _calcula_distancias(df_escolas, df_consultores):
 
         pre_df.update({nome_co: dists})
 
-    df_dists = pd.DataFrame(pre_df)
-
-    return df_dists
+    print("fim _calcula_distancias()")
+    return pd.DataFrame(pre_df)
 
 
 def _get_final_df(df_afinidade, df_consultores):
-
+    print("_get_final_df()")
     df_consultores = _consultores_handler(df_consultores)
     df_distancias = _calcula_distancias(df_afinidade, df_consultores)
-    # df_final = _get_final_df(df_distancias, df_afinidade)
 
     df_afinidade["motivacao"] = round(
         df_afinidade["afinidade"] * df_afinidade["valor_venda"]
@@ -50,9 +50,11 @@ def _get_final_df(df_afinidade, df_consultores):
 
 def _run_optimizer(df_final, cobertura, data_hora):
     """
-    recebe o df_final
+    Roda o solver
+    Retorna um df com as colunas "cod_escola", "consultor"
     """
-    nome_arquivo_log = str(Path(f"dados/resultados/{data_hora}_log.txt"))
+    print("_run_optimizer()")
+    nome_arquivo_log = str(Path(f"dados/resultados/log_{data_hora}.txt"))
 
     # --- MODELO ---
     modelo = pulp.LpProblem("Poliedro", pulp.LpMinimize)
@@ -86,11 +88,6 @@ def _run_optimizer(df_final, cobertura, data_hora):
     # --- SOLUÇÃO ---
     modelo.solve(pulp.HiGHS_CMD(logPath=nome_arquivo_log, gapRel=0.02))
 
-    import streamlit as st
-
-    st.write("modelo")
-    st.write(modelo)
-
     # --- FORMATANDO SOLUCAO ---
     padrao = re.compile(r"x_\((\d+),_'([^']+)'\)")
     # padrao = re.compile(r"x_*\((\d+),_['\"]?([^'\")]+)['\"]?\)")
@@ -113,11 +110,15 @@ def _result_handler(
     data_hora: str,
     usar_afinidade: bool,
     cobertura: float,
-):
+) -> pd.DataFrame:
     """
-    Recebe o modelo e retorna um df com as seguintes colunas:
-    consultor, cod_escola, cep, val_venda, lat, lon
+    Gera e salva o excel com o resultado nas seguintes colunas:
+    "consultor", "cod_escola", "cep", "valor_venda"
+
+    Retorna um df com as seguintes colunas:
+    "consultor", "cod_escola", "valor_venda", "lat", "lon"
     """
+    print("_result_handler()")
 
     df_training = df_training[["CO_ENTIDADE", "CO_CEP", "valor_venda", "lat", "lon"]]
     df_training["CO_ENTIDADE"] = df_training["CO_ENTIDADE"].astype(str).str.zfill(8)
@@ -125,8 +126,10 @@ def _result_handler(
     df_resultado = df_resultado.merge(
         df_training, left_on="cod_escola", right_on="CO_ENTIDADE"
     )
-    # TODO adicionar distancias?
-    df_excel = df_resultado[["consultor", "cod_escola", "CO_CEP", "valor_venda"]]
+
+    df_excel = df_resultado[
+        ["consultor", "cod_escola", "CO_CEP", "valor_venda", "lat", "lon"]
+    ]
     df_excel = df_excel.rename(columns={"CO_CEP": "cep"})
     df_excel["cep"] = (
         df_excel["cep"]
@@ -141,16 +144,21 @@ def _result_handler(
         sheet_name = f"{cobertura}_sem_afinidade"
 
     df_excel.to_excel(
-        Path(f"dados/resultados/{data_hora}_resultado.xlsx"),
+        Path(f"dados/resultados/resultado_{data_hora}.xlsx"),
         sheet_name=sheet_name,
         index=False,
         freeze_panes=(1, 1),
     )
 
-    return df_resultado
+    df_resultado[["consultor", "cod_escola", "valor_venda", "lat", "lon"]].to_csv(
+        "dados/temporarios/df_resultado.csv", index=False
+    )  # ATENCAO
+
+    return df_resultado[["consultor", "cod_escola", "valor_venda", "lat", "lon"]]
 
 
 def get_results(df_afinidade, df_training, df_consultores, usar_afinidade, cobertura):
+    print("get_results()")
     data_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     df_final = _get_final_df(df_afinidade, df_consultores)

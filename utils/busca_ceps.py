@@ -21,10 +21,10 @@ async def _call(async_client, cep: str) -> dict[str, tuple[str, str]]:
                     data = await resp.json()
 
                     lat = data.get("lat", None)
-                    lon = data.get("lon", None)
+                    lon = data.get("lng", None)
 
                     if not lat or not lon:
-                        print(f"CEP vazio: {cep}")
+                        print(f"CEP vazio: {cep}, lat {lat}, lon {lon}")
                         return {}
 
                     return {cep: (lat, lon)}
