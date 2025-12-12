@@ -1,8 +1,8 @@
 # personalizacao
-rascunhos/*
-dados/temporarios/*
+
 dados/inputs/*
 dados/resultados/*
+dados/temporarios/*
 
 .DS_Store
 
