@@ -98,7 +98,9 @@ async def _busca_bd(ceps_unicos: list[str]):
 
 
 # TODO criar um alerta se o cep nao existe (receber 404 da API)
-async def cep_to_coords(df_raw: pd.DataFrame, col_name: str) -> pd.DataFrame:
+async def cep_to_coords(
+    df: pd.DataFrame, col_name: str, keep_cep=False
+) -> pd.DataFrame:
     """
     Atenção
     ----------
@@ -115,14 +117,18 @@ async def cep_to_coords(df_raw: pd.DataFrame, col_name: str) -> pd.DataFrame:
         Primeiro tenta encontrar os CEPs no BD, caso nao encontre algum, baixa via
         API e completa o BD
     """
-    df = df_raw.copy()
-    df["_cep"] = df[col_name].str.zfill(8)
+
+    df["_cep"] = df[col_name].astype(str).str.zfill(8)
     ceps_unicos = list(set(df["_cep"]))
     print(f"Temos {len(ceps_unicos)} CEPs diferentes a consultar")
 
     df_coords = await _busca_bd(ceps_unicos)
 
     df_final = df.merge(df_coords, how="left", left_on="_cep", right_on="cep_bd")
-    df_final = df_final.drop(columns=[col_name, "_cep", "cep_bd"])
+
+    if keep_cep:
+        df_final = df_final.drop(columns=["_cep", "cep_bd"])
+    else:
+        df_final = df_final.drop(columns=[col_name, "_cep", "cep_bd"])
 
     return df_final
