@@ -1,8 +1,13 @@
 # personalizacao
 
 dados/inputs/*
+!dados/inputs/.gitkeep
+
 dados/resultados/*
+!dados/resultados/.gitkeep
+
 dados/temporarios/*
+!dados/temporarios/.gitkeep
 
 .DS_Store
 
