@@ -6,6 +6,8 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 
+from time import sleep
+
 from utils import (
     input_checker,
     build_training_df,
@@ -27,7 +29,7 @@ def selecionar_result(result_idx, texto):
     st.session_state["texto"] = texto
 
 
-# --- Rodapé ---
+# --- Body ---
 
 tab1, tab2 = st.tabs(["Novo Planejamento", "Historico de Planejamentos"])
 with tab1:
@@ -59,6 +61,7 @@ with tab1:
             st.rerun()
 
     sh("Ajustes")
+
     usar_afinidade = st.toggle(
         "Usar Afinidade (beta)",
         help="Caso não use afinidade o sistema irá distribuir iguais valores de potencial de venda para cada consultor",
@@ -84,11 +87,15 @@ with tab1:
 
     if st.session_state.get("calcular"):
         st.session_state["calcular"] = False
-        # df_afinidade = get_afinidade_df(df_training, usar_afinidade)
-        # df_resultado = get_results(
-        #     df_afinidade, df_training, df_consultores, usar_afinidade, cobertura
-        # )
-        df_resultado = pd.read_csv("dados/temporarios/df_resultado.csv")  # ATENCAO
+        with st.spinner("Calculando...", show_time=True):
+            df_afinidade = get_afinidade_df(df_training, usar_afinidade)
+            df_resultado = get_results(
+                df_afinidade, df_training, df_consultores, usar_afinidade, cobertura
+            )
+
+            # df_resultado = pd.read_csv("dados/temporarios/df_resultado.csv")  # ATENCAO
+            # sleep(5)  # ATENCAO
+
         show_result(-1)
 
 
@@ -122,8 +129,8 @@ st.markdown(
     Desenvolvido para a disciplina PO-207 de Pós Graduação no ITA/Unifesp por:
     <ul style="margin: 0; padding-left: 18px;">
         <li>Gabriel Guidoni (ITA)</li>
-        <li>Gustavo Guardia (Unifesp)</li>
         <li>Guilherme Ferracini (Unifesp)</li>
+        <li>Gustavo Guardia (Unifesp)</li>
         <li>Jardel Ferreira (Unifesp)</li>
         <li>Gabriel Ribeiro (ITA)</li>
     </ul>

@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 import json
 import plotly.graph_objects as go
+import random
 
 
 DIVIDER = "rainbow"
@@ -135,6 +136,7 @@ def _downl_button(result_idx: int = -1):
             type="primary",
             icon=":material/download:",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key=random.randint(1, 1000),  # miau
         )
 
 
@@ -156,7 +158,7 @@ def get_prev_results_infos():
     retorna uma lista de tuplas com data, hora, cobertura, afinidade, file_path
     """
     pasta = Path("dados/resultados")
-    paths = sorted(pasta.glob("resultado_*.xlsx"))[-5:]  # apenas os 5 ultimos
+    paths = sorted(pasta.glob("resultado_*.xlsx"))
 
     infos = []
     for result_idx, arquivo in enumerate(paths):
