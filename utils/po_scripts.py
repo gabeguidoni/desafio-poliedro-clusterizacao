@@ -150,9 +150,9 @@ def _result_handler(
         freeze_panes=(1, 1),
     )
 
-    df_resultado[["consultor", "cod_escola", "valor_venda", "lat", "lon"]].to_csv(
-        "dados/temporarios/df_resultado.csv", index=False
-    )  # ATENCAO
+    # df_resultado[["consultor", "cod_escola", "valor_venda", "lat", "lon"]].to_csv(
+    #     "dados/temporarios/df_resultado.csv", index=False
+    # )  # ATENCAO
 
     return df_resultado[["consultor", "cod_escola", "valor_venda", "lat", "lon"]]
 

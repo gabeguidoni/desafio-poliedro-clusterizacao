@@ -43,10 +43,12 @@ with tab1:
     except FileNotFoundError as e:
         inputs_ready = False
 
-    if not inputs_ready or st.button(
+    re_button = st.button(
         "Carregar novos inputs",
         help="Clique aqui após fazer alteração nos inputs",
-    ):
+    )
+
+    if not inputs_ready or re_button:
         inputs = []
         inputs.append(input_checker("escolas_atuais"))
         inputs.append(input_checker("local_consultores"))
@@ -54,6 +56,7 @@ with tab1:
         inputs.append(input_checker("microdados_ed_basica"))
         inputs.append(input_checker("RESULTADOS"))
 
+        inputs = [v for v in inputs if v is not None]
         if len(inputs) == 5:
             build_training_df(inputs)
             inputs[1].to_csv(Path("dados/temporarios/df_consultores.csv"), index=False)

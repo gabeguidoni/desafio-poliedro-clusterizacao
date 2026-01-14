@@ -286,10 +286,6 @@ def _add_clientes(df_training: pd.DataFrame, tupla_dfs_atuais):
         .drop_duplicates()
     )
 
-    # df_clientes = (
-    #     df_clientes.dropna(subset="co_inep").drop(columns="variable").drop_duplicates()
-    # )
-
     df_clientes["co_inep"] = df_clientes["co_inep"].astype(int)
 
     df_training = df_training.merge(
@@ -297,14 +293,17 @@ def _add_clientes(df_training: pd.DataFrame, tupla_dfs_atuais):
     )
 
     # Adiciona lista de bans
-    df_bans = tupla_dfs_atuais[1]
-    df_bans["cliente_ban"] = -1
+    try:
+        df_bans = tupla_dfs_atuais[1]
+        df_bans["cliente_ban"] = -1
 
-    df_bans["co_inep"] = df_bans["co_inep"].astype(int)
+        df_bans["co_inep"] = df_bans["co_inep"].astype(int)
 
-    df_training = df_training.merge(
-        df_bans, how="left", left_on="CO_ENTIDADE", right_on="co_inep"
-    )
+        df_training = df_training.merge(
+            df_bans, how="left", left_on="CO_ENTIDADE", right_on="co_inep"
+        )
+    except IndexError:  # Nao tem aba de clientes banidos
+        df_training[["co_inep_x", "co_inep_y", "cliente_ban"]] = None
 
     # Preenche NaN
     df_training["cliente"] = (
@@ -320,6 +319,7 @@ def build_training_df(inputs):
     escolas_atuais, local_consultores, ticket_medio, microdados_ed_basica, RESULTADOS
     """
     print("build_training_df()")
+
     nome_arquivo_temporario = Path("dados/temporarios/df_training.csv")
 
     df_training = _remove_colunas(inputs[3])  # df_md_ed_basica

@@ -68,7 +68,7 @@ def input_checker(name) -> pd.DataFrame:
 
     except FileNotFoundError as e:
         st.error(
-            f"**{title}** não encontrado, o nome deve ser exatamente: **{file_name}** e deve estar localizado em: **{input_path}**\n\n{e}"
+            f"**{title}** não encontrado, o nome deve ser exatamente: **{file_name}** e deve estar localizado em: **{input_path.parent}**"
         )
         return None
 
