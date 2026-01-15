@@ -1,0 +1,17 @@
+@echo off
+
+echo Iniciando Aplicacao...
+
+cd /d "%~dp0"
+
+if not exist ".venv" py -m venv .venv
+
+call .venv\Scripts\activate
+
+if not exist ".venv\.deps_instaladas" (
+    python -m pip install -r requirements.txt
+    python -m pip install highsbox --target ./solver
+    echo ok > .venv\.deps_instaladas
+)
+
+python -m streamlit run app.py

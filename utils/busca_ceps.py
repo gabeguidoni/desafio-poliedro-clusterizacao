@@ -85,7 +85,7 @@ async def _busca_bd(ceps_unicos: list[str]):
         with open(BD_PATH, "w", encoding="utf-8") as f:
             json.dump(banco_coords, f, ensure_ascii=False, indent=4)
     else:
-        print("Nao foi necessario baixar novas coods")
+        print("Nao foi necessario baixar novas coords")
 
     df_coords = pd.DataFrame(
         [

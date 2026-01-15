@@ -10,6 +10,7 @@ dados/temporarios/*
 !dados/temporarios/.gitkeep
 
 .DS_Store
+solver
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

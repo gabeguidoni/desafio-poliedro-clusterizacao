@@ -1,4 +1,4 @@
-import asyncio, pulp, re, os
+import asyncio, pulp, re, sys
 import pandas as pd
 from geopy.distance import geodesic
 from utils.busca_ceps import cep_to_coords
@@ -86,13 +86,16 @@ def _run_optimizer(df_final, cobertura, data_hora):
         )
 
     # --- SOLUÇÃO ---
-    try:  # no windows
-        solver_path = str(Path(f"solvers/highs.exe"))
-        modelo.solve(
-            pulp.HiGHS_CMD(path=solver_path, logPath=nome_arquivo_log, gapRel=0.02)
+    highs_bin = "highs.exe" if sys.platform.startswith("win") else "highs"
+    solver_path = Path("solver/highsbox/highs_dist/bin") / highs_bin
+    modelo.solve(
+        pulp.HiGHS_CMD(
+            path=str(solver_path),
+            logPath=nome_arquivo_log,
+            gapRel=0.02,
+            options=["presolve=off"],
         )
-    except:  # no mac
-        modelo.solve(pulp.HiGHS_CMD(logPath=nome_arquivo_log, gapRel=0.02))
+    )
 
     # --- FORMATANDO SOLUCAO ---
     padrao = re.compile(r"x_\((\d+),_'([^']+)'\)")
