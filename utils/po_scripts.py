@@ -86,7 +86,13 @@ def _run_optimizer(df_final, cobertura, data_hora):
         )
 
     # --- SOLUÇÃO ---
-    modelo.solve(pulp.HiGHS_CMD(logPath=nome_arquivo_log, gapRel=0.02))
+    try:  # no windows
+        solver_path = str(Path(f"solvers/highs.exe"))
+        modelo.solve(
+            pulp.HiGHS_CMD(path=solver_path, logPath=nome_arquivo_log, gapRel=0.02)
+        )
+    except:  # no mac
+        modelo.solve(pulp.HiGHS_CMD(logPath=nome_arquivo_log, gapRel=0.02))
 
     # --- FORMATANDO SOLUCAO ---
     padrao = re.compile(r"x_\((\d+),_'([^']+)'\)")
