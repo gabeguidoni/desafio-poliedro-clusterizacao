@@ -78,7 +78,7 @@ def input_checker(name) -> pd.DataFrame:
 
 
 def _draw_map(df_resultado):
-    print("draw_map()")
+    print("=======> draw_map()")
 
     cores = [
         "#E41A1C",
@@ -141,7 +141,7 @@ def _downl_button(result_idx: int = -1):
 
 
 def show_result(result_idx: int, header="Resultado"):
-    print("show_result()")
+    print("=======> show_result()")
     sh(header)
 
     pasta = Path("dados/resultados")

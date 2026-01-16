@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def _consultores_handler(df_consultores):
-    print("_consultores_handler()")
+    print("=======> _consultores_handler()")
     df = df_consultores.dropna()
     df["CEP"] = df["CEP"].str.replace("-", "")
     df = asyncio.run(cep_to_coords(df, "CEP"))
@@ -16,7 +16,7 @@ def _consultores_handler(df_consultores):
 
 
 def _calcula_distancias(df_escolas, df_consultores):
-    print("_calcula_distancias()")
+    print("=======> _calcula_distancias()")
     pre_df = {"CO_ENTIDADE": df_escolas["CO_ENTIDADE"]}
     for _, consultor in df_consultores.iterrows():
         nome_co = consultor["Consultor"]
@@ -36,7 +36,7 @@ def _calcula_distancias(df_escolas, df_consultores):
 
 
 def _get_final_df(df_afinidade, df_consultores):
-    print("_get_final_df()")
+    print("=======> _get_final_df()")
     df_consultores = _consultores_handler(df_consultores)
     df_distancias = _calcula_distancias(df_afinidade, df_consultores)
 
@@ -53,7 +53,7 @@ def _run_optimizer(df_final, cobertura, data_hora):
     Roda o solver
     Retorna um df com as colunas "cod_escola", "consultor"
     """
-    print("_run_optimizer()")
+    print("=======> _run_optimizer()")
     nome_arquivo_log = str(Path(f"dados/resultados/log_{data_hora}.txt"))
 
     # --- MODELO ---
@@ -127,7 +127,7 @@ def _result_handler(
     Retorna um df com as seguintes colunas:
     "consultor", "cod_escola", "valor_venda", "lat", "lon"
     """
-    print("_result_handler()")
+    print("=======> _result_handler()")
 
     df_training = df_training[["CO_ENTIDADE", "CO_CEP", "valor_venda", "lat", "lon"]]
     df_training["CO_ENTIDADE"] = df_training["CO_ENTIDADE"].astype(str).str.zfill(8)
@@ -167,7 +167,7 @@ def _result_handler(
 
 
 def get_results(df_afinidade, df_training, df_consultores, usar_afinidade, cobertura):
-    print("get_results()")
+    print("=======> get_results()")
     data_hora = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     df_final = _get_final_df(df_afinidade, df_consultores)
